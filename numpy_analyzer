@@ -1,0 +1,277 @@
+
+import numpy as np
+
+
+class DataAnalytics:
+
+    # Constructor: saves the array when the object is created
+    def __init__(self, array):
+        self.__array = array              # private variable
+
+    # Static method: does not need the object, just reads numbers
+    @staticmethod
+    def read_numbers(message):
+        numbers = []
+        for text in input(message).split():
+            numbers.append(float(text))
+        array = np.array(numbers)
+        if np.all(array == array.astype(int)):    # show 10 instead of 10.0
+            array = array.astype(int)
+        return array
+
+    # Class method: creates a new DataAnalytics object
+    @classmethod
+    def create_array(cls, kind):
+        if kind == 1:
+            size = int(input("\nEnter the number of elements: "))
+            array = cls.read_numbers(f"Enter {size} elements separated by space: ")
+            array = array.reshape(size)
+        elif kind == 2:
+            rows = int(input("\nEnter the number of rows: "))
+            cols = int(input("Enter the number of columns: "))
+            array = cls.read_numbers(f"Enter {rows * cols} elements for the array separated by space: ")
+            array = array.reshape(rows, cols)
+        else:
+            depth = int(input("\nEnter the number of blocks: "))
+            rows = int(input("Enter the number of rows: "))
+            cols = int(input("Enter the number of columns: "))
+            array = cls.read_numbers(f"Enter {depth * rows * cols} elements separated by space: ")
+            array = array.reshape(depth, rows, cols)
+
+        print("\nArray created successfully:")
+        print(array)
+        return cls(array)
+
+    # Private methods: only used inside this class
+    def __show(self, title, data):
+        print("\n" + title)
+        print(data)
+
+    def __second_array(self):
+        size = self.__array.size
+        second = DataAnalytics.read_numbers(
+            f"\nEnter the same-size array elements ({size} elements separated by space): ")
+        return second.reshape(self.__array.shape)
+
+    # ---------- Indexing and slicing ----------
+    def indexing(self):
+        text = input("\nEnter the index (example: 1 2 for row 1, column 2): ")
+        position = tuple(int(x) for x in text.split())
+        print("Element:", self.__array[position])
+
+    def slicing(self):
+        slices = []
+        for number in range(self.__array.ndim):
+            text = input(f"\nEnter the range for dimension {number + 1} (start:end): ")
+            start, end = text.split(":")
+            slices.append(slice(int(start), int(end)))
+        self.__show("Sliced Array:", self.__array[tuple(slices)])
+
+    # ---------- Mathematical operations ----------
+    def math(self, choice):
+        a = self.__array
+        b = self.__second_array()
+        self.__show("Original Array:", a)
+        self.__show("Second Array:", b)
+        if choice == 1:
+            self.__show("Result of Addition:", a + b)
+        elif choice == 2:
+            self.__show("Result of Subtraction:", a - b)
+        elif choice == 3:
+            self.__show("Result of Multiplication:", a * b)
+        elif choice == 4:
+            if 0 in b:
+                print("\nCannot divide by zero.")
+            else:
+                self.__show("Result of Division:", a / b)
+
+    def matrix(self, choice):
+        rows = int(input("\nEnter rows of the second matrix: "))
+        cols = int(input("Enter columns of the second matrix: "))
+        b = self.read_numbers(f"Enter {rows * cols} elements separated by space: ")
+        b = b.reshape(rows, cols)
+        self.__show("Original Array:", self.__array)
+        self.__show("Second Array:", b)
+        if choice == 5:
+            self.__show("Dot Product:", np.dot(self.__array, b))
+        else:
+            self.__show("Matrix Multiplication:", np.matmul(self.__array, b))
+
+    # ---------- Combine and split ----------
+    def combine(self):
+        second = self.__second_array()
+        self.__show("Original Array:", self.__array)
+        self.__show("Second Array:", second)
+        self.__show("Combined Array (Vertical Stack):", np.concatenate((self.__array, second)))
+
+    def split(self):
+        parts = int(input("\nHow many equal parts? "))
+        for number, piece in enumerate(np.split(self.__array, parts), start=1):
+            self.__show(f"Part {number}:", piece)
+
+    # ---------- Search, sort, filter ----------
+    def search(self):
+        value = float(input("\nEnter the value to search: "))
+        positions = np.argwhere(self.__array == value)
+        if len(positions) == 0:
+            print("Value not found.")
+        else:
+            print("Found at position(s):")
+            for p in positions:
+                print(tuple(int(x) for x in p))
+
+    def sort(self):
+        order = input("\nAscending or descending? (a/d): ")
+        result = np.sort(self.__array)
+        if order == "d":
+            result = result[..., ::-1]
+        self.__show("Original Array:", self.__array)
+        self.__show("Sorted Array:", result)
+        if self.__array.ndim > 1:
+            print("(Sorting applied row-wise.)")
+
+    def filter(self):
+        symbol = input("\nEnter a condition symbol (>, <, >=, <=, ==, !=): ")
+        number = float(input("Enter the number to compare with: "))
+        a = self.__array
+        if symbol == ">":
+            result = a[a > number]
+        elif symbol == "<":
+            result = a[a < number]
+        elif symbol == ">=":
+            result = a[a >= number]
+        elif symbol == "<=":
+            result = a[a <= number]
+        elif symbol == "==":
+            result = a[a == number]
+        else:
+            result = a[a != number]
+        self.__show("Filtered values:", result)
+
+    # ---------- Aggregates and statistics ----------
+    def statistics(self, choice):
+        a = self.__array
+        self.__show("Original Array:", a)
+        if choice == 1:
+            print("\nSum of Array:", np.sum(a))
+        elif choice == 2:
+            print("\nMean of Array:", np.mean(a))
+        elif choice == 3:
+            print("\nMedian of Array:", np.median(a))
+        elif choice == 4:
+            print("\nStandard Deviation of Array:", np.std(a))
+        elif choice == 5:
+            print("\nVariance of Array:", np.var(a))
+        elif choice == 6:
+            print("\nMinimum value:", np.min(a))
+        elif choice == 7:
+            print("\nMaximum value:", np.max(a))
+        elif choice == 8:
+            percent = float(input("\nEnter percentile (0-100): "))
+            print("Percentile value:", np.percentile(a, percent))
+        elif choice == 9:
+            b = self.__second_array()
+            print("\nCorrelation coefficient:", np.corrcoef(a.flatten(), b.flatten())[0, 1])
+
+
+# ---------------- MAIN PROGRAM (menus) ----------------
+print("Welcome to the NumPy Analyzer!")
+print("=" * 42)
+analyzer = None
+
+while True:
+    print("\nChoose an option:")
+    print("1. Create a Numpy Array")
+    print("2. Perform Mathematical Operations")
+    print("3. Combine or Split Arrays")
+    print("4. Search, Sort, or Filter Arrays")
+    print("5. Compute Aggregates and Statistics")
+    print("6. Exit")
+    choice = input("Enter your choice: ")
+
+    if choice == "6":
+        print("\nThank you for using the NumPy Analyzer! Goodbye!")
+        break
+
+    if choice != "1" and analyzer is None:
+        print("\nPlease create an array first (option 1).")
+        continue
+
+    try:
+        if choice == "1":
+            print("\nSelect the type of array to create:")
+            print("1. 1D Array")
+            print("2. 2D Array")
+            print("3. 3D Array")
+            kind = int(input("Enter your choice: "))
+            analyzer = DataAnalytics.create_array(kind)
+
+            while True:
+                print("\nChoose an operation:")
+                print("1. Indexing")
+                print("2. Slicing")
+                print("3. Go Back")
+                sub = input("Enter your choice: ")
+                if sub == "1":
+                    analyzer.indexing()
+                elif sub == "2":
+                    analyzer.slicing()
+                else:
+                    break
+
+        elif choice == "2":
+            print("\nChoose a mathematical operation:")
+            print("1. Addition")
+            print("2. Subtraction")
+            print("3. Multiplication")
+            print("4. Division")
+            print("5. Dot Product (2D)")
+            print("6. Matrix Multiplication (2D)")
+            sub = int(input("Enter your choice: "))
+            if sub <= 4:
+                analyzer.math(sub)
+            else:
+                analyzer.matrix(sub)
+
+        elif choice == "3":
+            print("\nChoose an option:")
+            print("1. Combine Arrays")
+            print("2. Split Array")
+            sub = input("Enter your choice: ")
+            if sub == "1":
+                analyzer.combine()
+            else:
+                analyzer.split()
+
+        elif choice == "4":
+            print("\nChoose an option:")
+            print("1. Search a value")
+            print("2. Sort the array")
+            print("3. Filter values")
+            sub = input("Enter your choice: ")
+            if sub == "1":
+                analyzer.search()
+            elif sub == "2":
+                analyzer.sort()
+            else:
+                analyzer.filter()
+
+        elif choice == "5":
+            print("\nChoose an aggregate/statistical operation:")
+            print("1. Sum")
+            print("2. Mean")
+            print("3. Median")
+            print("4. Standard Deviation")
+            print("5. Variance")
+            print("6. Minimum")
+            print("7. Maximum")
+            print("8. Percentile")
+            print("9. Correlation Coefficient")
+            analyzer.statistics(int(input("Enter your choice: ")))
+
+        else:
+            print("Please choose 1-6.")
+
+    except Exception:
+        
+        print("\nInvalid input. Please try again.")
